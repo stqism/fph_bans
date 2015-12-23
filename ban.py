@@ -1,10 +1,52 @@
-import os, urllib2, time, gzip, functools
-from flask import Flask, Response, after_this_request, request
+import os, urllib2, time, gzip, functools, datetime
+from flask import Flask, Response, after_this_request, request, make_response
+from wsgiref.handlers import format_date_time
 from email.utils import formatdate
 from cStringIO import StringIO as IO
+wraps = functools.wraps
 app = Flask(__name__)
 
-cache = [0, 0, '']
+user_cache = [0, 0, '']
+
+def cache(expires=None, round_to_minute=False):
+    """
+    Add Flask cache response headers based on expires in seconds.
+
+    If expires is None, caching will be disabled.
+    Otherwise, caching headers are set to expire in now + expires seconds
+    If round_to_minute is True, then it will always expire at the start of a minute (seconds = 0)
+
+    Example usage:
+
+    @app.route('/map')
+    @cache(expires=60)
+    def index():
+      return render_template('index.html')
+
+    """
+    def cache_decorator(view):
+        @wraps(view)
+        def cache_func(*args, **kwargs):
+            now = datetime.datetime.now()
+
+            response = make_response(view(*args, **kwargs))
+            response.headers['Last-Modified'] = format_date_time(time.mktime(now.timetuple()))
+
+            if expires is None:
+                response.headers['Cache-Control'] = 'no-store, no-cache, must-revalidate, post-check=0, pre-check=0, max-age=0'
+                response.headers['Expires'] = '-1'
+            else:
+                expires_time = now + datetime.timedelta(seconds=expires)
+
+                if round_to_minute:
+                    expires_time = expires_time.replace(second=0, microsecond=0)
+
+                response.headers['Cache-Control'] = 'public'
+                response.headers['Expires'] = format_date_time(time.mktime(expires_time.timetuple()))
+
+            return response
+        return cache_func
+    return cache_decorator
 
 def gzipped(f):
     @functools.wraps(f)
@@ -43,20 +85,20 @@ def getusers():
     now = time.time()
     timestamp = int(now / 100)
 
-    if cache[0] != timestamp:
-        cache[0] = timestamp
+    if user_cache[0] != timestamp:
+        user_cache[0] = timestamp
         req = urllib2.Request("https://voat.co/v/fatpeoplehate/modlog/bannedusers", headers={ 'User-Agent': 'UNIX:the_kgb:0.157' })
         fd = urllib2.urlopen(req)
 
         for line in fd:
             if 'Total users banned' in line:
                 num = int(line.split(':')[1])
-                if num != cache[1]:
-                    cache[1] = num
-                    cache[2] = formatdate(timeval=now, localtime=False, usegmt=True)
+                if num != user_cache[1]:
+                    user_cache[1] = num
+                    user_cache[2] = formatdate(timeval=now, localtime=False, usegmt=True)
                 break
 
-    return cache[1]
+    return user_cache[1]
 
 def getsvg_light():
     data = """
@@ -85,28 +127,29 @@ xmlns:xlink="http://www.w3.org/1999/xlink" width="390" height="335" style="fill:
 """ % (getusers())
 
     return data
-    
+
 @app.route('/')
 @gzipped
 def main():
     return "FPH bans web app.<br><a href='/light/bans.svg'>Light counter</a><br><a href='/dark/bans.svg'>Dark counter</a>"
 
 @app.route('/light/bans.svg')
+@cache(expires=300)
 @gzipped
+
 def light():
     resp = Response(getsvg_light(), mimetype='image/svg+xml')
-    resp.headers['Last-Modified'] = cache[2]
-    resp.headers['Cache-Control'] = 'max-age=300'
+    resp.headers['Last-Modified'] = user_cache[2]
     return resp
 
 @app.route('/dark/bans.svg')
+@cache(expires=300)
 @gzipped
 def dark():
     resp = Response(getsvg_dark(), mimetype='image/svg+xml')
-    resp.headers['Last-Modified'] = cache[2]
-    resp.headers['Cache-Control'] = 'max-age=300'
+    resp.headers['Last-Modified'] = user_cache[2]
     return resp
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8008))
-    app.run(host='0.0.0.0',port=port)
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host='0.0.0.0',port=port, debug=True)
