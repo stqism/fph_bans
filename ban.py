@@ -1,4 +1,4 @@
-import os, urllib2, time, gzip, functools, datetime
+import os, urllib2, time, gzip, functools, datetime, ConfigParser
 from flask import Flask, Response, after_this_request, request, make_response
 from wsgiref.handlers import format_date_time
 from email.utils import formatdate
@@ -7,6 +7,21 @@ wraps = functools.wraps
 app = Flask(__name__)
 
 user_cache = [0, 0, '']
+
+fd = open('ban.conf', 'r')
+config = ConfigParser.ConfigParser()
+config.readfp(fd)
+fd.close()
+
+conf_hostname = config.get('network', 'hostname')
+conf_port = int(config.get('network', 'port'))
+voat = config.get('main', 'voat')
+expires = int(config.get('main', 'expires'))
+counter = int(config.get('main', 'counter-cache'))
+try:
+    debug = bool(config.get('main', 'debug'))
+except:
+    debug = False
 
 def cache(expires=None, round_to_minute=False):
     """
@@ -83,11 +98,11 @@ def gzipped(f):
 
 def getusers():
     now = time.time()
-    timestamp = int(now / 100)
+    timestamp = int(now / counter)
 
     if user_cache[0] != timestamp:
         user_cache[0] = timestamp
-        req = urllib2.Request("https://voat.co/v/fatpeoplehate/modlog/bannedusers", headers={ 'User-Agent': 'UNIX:the_kgb:0.157' })
+        req = urllib2.Request("https://voat.co/v/" + voat + "/modlog/bannedusers", headers={ 'User-Agent': 'UNIX:the_kgb:0.157' })
         fd = urllib2.urlopen(req)
 
         for line in fd:
@@ -134,7 +149,7 @@ def main():
     return "FPH bans web app.<br><a href='/light/bans.svg'>Light counter</a><br><a href='/dark/bans.svg'>Dark counter</a>"
 
 @app.route('/light/bans.svg')
-@cache(expires=300)
+@cache(expires=expires)
 @gzipped
 
 def light():
@@ -143,7 +158,7 @@ def light():
     return resp
 
 @app.route('/dark/bans.svg')
-@cache(expires=300)
+@cache(expires=expires)
 @gzipped
 def dark():
     resp = Response(getsvg_dark(), mimetype='image/svg+xml')
@@ -151,5 +166,5 @@ def dark():
     return resp
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8008))
-    app.run(host='0.0.0.0',port=port)
+    port = int(os.environ.get("PORT", conf_port))
+    app.run(host=conf_hostname,port=port, debug=debug)
