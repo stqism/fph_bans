@@ -15,10 +15,13 @@ fd.close()
 
 conf_hostname = config.get('network', 'hostname')
 conf_port = int(config.get('network', 'port'))
-voat = config.get('main', 'subvoat')
-expires = config.get('main', 'expires')
-counter = config.get('main', 'counter-cache')
-debug = bool(config.get('main', 'debug'))
+voat = config.get('main', 'voat')
+expires = int(config.get('main', 'expires'))
+counter = int(config.get('main', 'counter-cache'))
+try:
+    debug = bool(config.get('main', 'debug'))
+except:
+    debug = False
 
 def cache(expires=None, round_to_minute=False):
     """
