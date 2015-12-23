@@ -18,6 +18,7 @@ conf_port = int(config.get('network', 'port'))
 voat = config.get('main', 'subvoat')
 expires = config.get('main', 'expires')
 counter = config.get('main', 'counter-cache')
+debug = bool(config.get('main', 'debug'))
 
 def cache(expires=None, round_to_minute=False):
     """
@@ -163,4 +164,4 @@ def dark():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", conf_port))
-    app.run(host=conf_hostname,port=port)
+    app.run(host=conf_hostname,port=port, debug=debug)
