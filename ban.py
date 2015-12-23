@@ -96,15 +96,12 @@ def main():
 def light():
     resp = Response(getsvg_light(), mimetype='image/svg+xml')
     resp.headers['Last-Modified'] = cache[2]
-    resp.headers['Cache-Control'] = 'max-age=300'
     return resp
 
 @app.route('/dark/bans.svg')
 @gzipped
 def dark():
     resp = Response(getsvg_dark(), mimetype='image/svg+xml')
-    resp.headers['Last-Modified'] = cache[2]
-    resp.headers['Cache-Control'] = 'max-age=300'
     return resp
 
 if __name__ == "__main__":
