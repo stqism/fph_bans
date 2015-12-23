@@ -1,5 +1,5 @@
 import os, urllib2, time, gzip, functools, datetime
-from flask import Flask, Response, after_this_request, request
+from flask import Flask, Response, after_this_request, request, make_response
 from wsgiref.handlers import format_date_time
 from email.utils import formatdate
 from cStringIO import StringIO as IO
@@ -86,7 +86,7 @@ def getusers():
     timestamp = int(now / 100)
 
     if user_cache[0] != timestamp:
-        user_user_cache[0] = timestamp
+        user_cache[0] = timestamp
         req = urllib2.Request("https://voat.co/v/fatpeoplehate/modlog/bannedusers", headers={ 'User-Agent': 'UNIX:the_kgb:0.157' })
         fd = urllib2.urlopen(req)
 
@@ -151,5 +151,5 @@ def dark():
     return resp
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8008))
-    app.run(host='0.0.0.0',port=port)
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host='0.0.0.0',port=port, debug=True)
