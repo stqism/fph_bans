@@ -85,6 +85,11 @@ xmlns:xlink="http://www.w3.org/1999/xlink" width="390" height="335" style="fill:
 """ % (getusers())
 
     return data
+    
+@app.route('/')
+@gzipped
+    def main():
+        return "FPH bans web app.<br><a href='/light/bans.svg'>Light counter</a><br><a href='/dark/bans.svg'>Dark counter</a>"
 
 @app.route('/light/bans.svg')
 @gzipped
