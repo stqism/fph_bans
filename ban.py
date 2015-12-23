@@ -1,4 +1,4 @@
-import urllib2, time, gzip, functools
+import os, urllib2, time, gzip, functools
 from flask import Flask, Response, after_this_request, request
 from email.utils import formatdate
 from cStringIO import StringIO as IO
