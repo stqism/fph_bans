@@ -26,6 +26,8 @@ Settings on Heroku:
 If you use Heroku you can set most of the settings using config vars
 In your apps settings click reveal config vars and add/edit keys as needed
 
+The format below is: KEY (keep the caps): what it does based on the above settings
+
 * VOAT: voat
 * EXPIRES: expires
 * COUNTER: counter-cache
