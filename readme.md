@@ -1,4 +1,4 @@
-FPH bans web app
+FPH bans RSS web app
 ======
 [![Build Status](https://travis-ci.com/stqism/fph_bans.svg?token=Tpv4j5YDTwy7oaWvJpJ3&branch=master)](https://travis-ci.com/stqism/fph_bans) [![Heroku](https://heroku-badge.herokuapp.com/?app=fph-bans&style=flat&svg=1)](https://fph-bans.herokuapp.com) [![GitHub license](http://img.shields.io/:license-proprietary-blue.svg)](https://github.com/stqism/fph_bans/blob/master/licence.md)
 
@@ -12,7 +12,7 @@ Heroku:
 
 or 
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/stqism/fph_bans)
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/stqism/fph_bans/tree/rss)
 
 Python:
 ===
