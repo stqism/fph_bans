@@ -35,16 +35,6 @@ except:
 
 debug = bool(os.environ.get("DEBUG", debug))
 
-
-fd = open('test', 'r')
-post = fd.read()
-fd.close()
-
-fd = open('test_comment', 'r')
-comment = fd.read()
-fd.close()
-
-
 def cache(expires=None, round_to_minute=False):
     """
     Add Flask cache response headers based on expires in seconds.
@@ -118,25 +108,19 @@ def gzipped(f):
 
     return view_func
 
-def getusers():
-    now = time.time()
-    timestamp = int(now / counter)
+def getpost():
+    req = urllib2.Request("https://voat.co/v/" + voat + "/modlog/deleted", headers={ 'User-Agent': 'UNIX:the_kgb:0.157' })
+    fd = urllib2.urlopen(req)
+    data = fd.read()
+    fd.close()
+    return data
 
-    if user_cache[0] != timestamp:
-        user_cache[0] = timestamp
-        req = urllib2.Request("https://voat.co/v/" + voat + "/modlog/bannedusers", headers={ 'User-Agent': 'UNIX:the_kgb:0.157' })
-        fd = urllib2.urlopen(req)
-
-        for line in fd:
-            if 'Total users banned' in line:
-                num = int(line.split(':')[1])
-                if num != user_cache[1]:
-                    user_cache[1] = num
-                    user_cache[2] = formatdate(timeval=now, localtime=False, usegmt=True)
-                break
-
-    return user_cache[1]
-
+def getcomment():
+    req = urllib2.Request("https://voat.co/v/" + voat + "/modlog/deletedcomments", headers={ 'User-Agent': 'UNIX:the_kgb:0.157' })
+    fd = urllib2.urlopen(req)
+    data = fd.read()
+    fd.close()
+    return data
 
 @app.route('/')
 @gzipped
@@ -148,7 +132,7 @@ def main():
 @gzipped
 
 def route_post():
-    resp = Response(postfeed(post), mimetype='application/rss+xml')
+    resp = Response(postfeed(getpost()), mimetype='application/rss+xml')
     resp.headers['Last-Modified'] = user_cache[2]
     return resp
 
@@ -157,7 +141,7 @@ def route_post():
 @cache(expires=expires)
 @gzipped
 def route_comment():
-    resp = Response(commentfeed(comment), mimetype='application/rss+xml')
+    resp = Response(commentfeed(getcomment()), mimetype='application/rss+xml')
     resp.headers['Last-Modified'] = user_cache[2]
     return resp
 

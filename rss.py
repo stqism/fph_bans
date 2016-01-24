@@ -18,7 +18,6 @@ def postfeed(fromlib):
             continue
 
         user = rline[0]
-        print rline
         date_str = rline[2] + ' ' + rline[3] + ' ' + rline[4].strip('.') + ' UTC'
 
         reason = 'Feature not impmenented'
@@ -43,7 +42,6 @@ def postfeed(fromlib):
         entry.link({'href': url})
         entry.title(title)
         entry.author({'name':'https://voat.co/user/' + user, 'email': user})
-        print date_str
         entry.published(date_str)
         entry.summary('Banned by %s, Reason: %s' % (user, reason))
 
