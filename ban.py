@@ -3,6 +3,9 @@ from flask import Flask, Response, after_this_request, request, make_response
 from wsgiref.handlers import format_date_time
 from email.utils import formatdate
 from cStringIO import StringIO as IO
+from feedgen.feed import FeedGenerator
+from rss import *
+import datetime
 wraps = functools.wraps
 app = Flask(__name__)
 
@@ -29,8 +32,18 @@ try:
     debug = bool(config.get('main', 'debug'))
 except:
     debug = False
-    
+
 debug = bool(os.environ.get("DEBUG", debug))
+
+
+fd = open('test', 'r')
+post = fd.read()
+fd.close()
+
+fd = open('test_comment', 'r')
+comment = fd.read()
+fd.close()
+
 
 def cache(expires=None, round_to_minute=False):
     """
@@ -124,53 +137,27 @@ def getusers():
 
     return user_cache[1]
 
-def getsvg_light():
-    data = """
-<svg xmlns="http://www.w3.org/2000/svg"
-xmlns:xlink="http://www.w3.org/1999/xlink" width="390" height="335">
-
-<text x="55" y="150" font-family="Verdana" font-size="90">%s</text>
-<text x="15" y="250" font-family="Verdana" font-size="90">BANS</text>
-<text x="63" y="15" font-family="Verdana" font-size="12">This is an unpaid demo</text>
-<text x="50" y="320" font-family="Verdana" font-size="12">Credit: /u/coup_de_shitlord</text>
-</svg>
-""" % (getusers())
-
-    return data
-
-def getsvg_dark():
-    data = """
-<svg xmlns="http://www.w3.org/2000/svg"
-xmlns:xlink="http://www.w3.org/1999/xlink" width="390" height="335" style="fill:rgb(256,256,256)">
-
-<text x="55" y="150" font-family="Verdana" font-size="90">%s</text>
-<text x="15" y="250" font-family="Verdana" font-size="90">BANS</text>
-<text x="63" y="15" font-family="Verdana" font-size="12">This is an unpaid demo</text>
-<text x="50" y="320" font-family="Verdana" font-size="12">Credit: /u/coup_de_shitlord</text>
-</svg>
-""" % (getusers())
-
-    return data
 
 @app.route('/')
 @gzipped
 def main():
-    return "FPH bans web app.<br><a href='/light/bans.svg'>Light counter</a><br><a href='/dark/bans.svg'>Dark counter</a>"
+    return "FPH deleted RSS feed<br><a href='/deleted/post.rss'>posts</a><br><a href='/deleted/comment.rss'>comments</a>"
 
-@app.route('/light/bans.svg')
+@app.route('/deleted/post.rss')
 @cache(expires=expires)
 @gzipped
 
-def light():
-    resp = Response(getsvg_light(), mimetype='image/svg+xml')
+def route_post():
+    resp = Response(postfeed(post), mimetype='application/rss+xml')
     resp.headers['Last-Modified'] = user_cache[2]
     return resp
 
-@app.route('/dark/bans.svg')
+
+@app.route('/deleted/comment.rss')
 @cache(expires=expires)
 @gzipped
-def dark():
-    resp = Response(getsvg_dark(), mimetype='image/svg+xml')
+def route_comment():
+    resp = Response(commentfeed(comment), mimetype='application/rss+xml')
     resp.headers['Last-Modified'] = user_cache[2]
     return resp
 
